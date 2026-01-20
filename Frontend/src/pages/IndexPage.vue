@@ -1,17 +1,93 @@
 <template>
-  <q-page class="flex flex-center">
-    <img
-      alt="Quasar logo"
-      src="~assets/quasar-logo-vertical.svg"
-      style="width: 200px; height: 200px"
-    />
+  <q-page padding>
+    <div class="text-h4 q-mb-md">
+      Advanced Full-Stack Demo (Quasar + Express)
+    </div>
+
+    <q-card class="q-mb-md">
+      <q-card-section>
+        <div class="text-h6">Git Workflow</div>
+        <q-list bordered separator class="q-mt-sm">
+          <q-item v-for="(step, index) in gitSteps" :key="index">
+            <q-item-section avatar>
+              <q-badge>{{ index + 1 }}</q-badge>
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>{{ step.title }}</q-item-label>
+              <q-item-label caption>{{ step.detail }}</q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-card-section>
+    </q-card>
+
+    <q-card class="q-mb-md">
+      <q-card-section>
+        <div class="text-h6">Docker Concepts</div>
+        <q-list bordered separator class="q-mt-sm">
+          <q-item v-for="(item, index) in dockerItems" :key="index">
+            <q-item-section>
+              <q-item-label>{{ item.title }}</q-item-label>
+              <q-item-label caption>{{ item.detail }}</q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-card-section>
+    </q-card>
+
+    <q-card>
+      <q-card-section>
+        <div class="text-h6">Data from Backend API</div>
+        <q-spinner v-if="loading" color="primary" size="2em" />
+        <q-list v-else bordered separator class="q-mt-sm">
+          <q-item>
+            <q-item-section>
+              <q-item-label>Advanced Git</q-item-label>
+              <q-item-label caption>{{ apiData.git.detail }}</q-item-label>
+            </q-item-section>
+          </q-item>
+          <q-item>
+            <q-item-section>
+              <q-item-label>Advanced Docker</q-item-label>
+              <q-item-label caption>{{ apiData.docker.detail }}</q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-list>
+        <q-btn v-if="!loading" color="primary" @click="fetchData">Refresh Data</q-btn>
+      </q-card-section>
+    </q-card>
   </q-page>
 </template>
 
-<script>
-import { defineComponent } from 'vue'
+<script setup>
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
 
-export default defineComponent({
-  name: 'IndexPage',
-})
+const gitSteps = [
+  { title: 'Create branch', detail: 'git checkout -b feature/new' },
+  { title: 'Commit changes', detail: 'git commit -m "feat: add something"' },
+  { title: 'Push branch', detail: 'git push origin feature/new' }
+];
+const dockerItems = [
+  { title: 'Build image', detail: 'docker build -t app .' },
+  { title: 'Run container', detail: 'docker run -p 8080:80 app' },
+  { title: 'Compose up', detail: 'docker compose up' }
+];
+
+const apiData = ref({ git: {}, docker: {} });
+const loading = ref(true);
+
+const fetchData = async () => {
+  loading.value = true;
+  try {
+    const response = await axios.get(import.meta.env.VITE_API_URL + '/api/demo');
+    apiData.value = response.data;
+  } catch (error) {
+    console.error('API Error:', error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(fetchData);
 </script>
