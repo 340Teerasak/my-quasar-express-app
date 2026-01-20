@@ -10,7 +10,8 @@ COPY .npmrc ./
 # ถ้ามี .npmrc สำหรับ private packages
 
 # Install deps
-RUN npm ci --legacy-peer-deps   # ใช้ --legacy-peer-deps ถ้ามี peer deps conflict ใน Quasar v2
+RUN npm ci --legacy-peer-deps   
+# ใช้ --legacy-peer-deps ถ้ามี peer deps conflict ใน Quasar v2
 
 # Copy โค้ดที่เหลือ (src, public, etc.)
 COPY . .
