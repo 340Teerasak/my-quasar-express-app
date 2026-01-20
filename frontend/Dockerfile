@@ -1,29 +1,31 @@
-# Stage 1: Build the Quasar app
+# Stage 1: Build Quasar SPA
 FROM node:20-alpine AS builder
 
-# ตั้ง working directory ให้ชัดเจน
 WORKDIR /app
 
-# Copy package files ก่อน เพื่อ cache dependencies
+# Copy config และ package ก่อนเพื่อ cache dependencies ดีขึ้น
+COPY quasar.config.* ./
 COPY package*.json ./
-COPY quasar.config.* ./?   
-# Install dependencies
-RUN npm ci   # หรือ npm install ถ้า ci ไม่ work
+COPY .npmrc ./     
+# ถ้ามี .npmrc สำหรับ private packages
 
-# Copy โค้ดทั้งหมด
+# Install deps
+RUN npm ci --legacy-peer-deps   # ใช้ --legacy-peer-deps ถ้ามี peer deps conflict ใน Quasar v2
+
+# Copy โค้ดที่เหลือ (src, public, etc.)
 COPY . .
 
-# Build Quasar app (สำคัญ: run ภายใน /app ซึ่งเป็น Quasar project)
-RUN npx quasar build -m spa   # หรือ npm run build ถ้า script ใน package.json เป็น "build": "quasar build -m spa"
+# Build production bundle (ใช้ npx เพื่อเรียก quasar CLI จาก node_modules)
+RUN npx quasar build -m spa
 
-# Stage 2: Serve with nginx
-FROM nginx:alpine
+# Stage 2: Serve ด้วย nginx (ขนาดเล็กมาก)
+FROM nginx:alpine AS production-stage
 
-# Copy built files จาก stage แรกไปยัง nginx
+# Copy built files จาก builder stage
 COPY --from=builder /app/dist/spa /usr/share/nginx/html
 
-# Expose port
-EXPOSE 80
+# Optional: เพิ่ม custom nginx config ถ้าต้องการ (เช่น proxy API)
+# COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Run nginx
+EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
